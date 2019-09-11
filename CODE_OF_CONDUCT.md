@@ -1,3 +1,5 @@
+commit 1
+
 # Community Guidelines and Code of Conduct
 
 We want to keep the Puppet communities awesome, and we need your help to keep it
