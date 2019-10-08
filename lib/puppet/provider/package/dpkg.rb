@@ -67,7 +67,7 @@ Puppet::Type.type(:package).provide :dpkg, :parent => Puppet::Provider::Package 
       elsif ['config-files', 'half-installed', 'unpacked', 'half-configured'].include?(hash[:status])
         hash[:ensure] = :absent
       end
-      hash[:ensure] = :held if hash[:desired] == 'hold'
+      hash[:hold] = (hash[:desired] == 'hold')
     else
       Puppet.debug("Failed to match dpkg-query line #{line.inspect}")
     end
@@ -94,6 +94,7 @@ Puppet::Type.type(:package).provide :dpkg, :parent => Puppet::Provider::Package 
     args << '-i' << file
 
     dpkg(*args)
+    self.hold if @resource[:hold]
   end
 
   def update
@@ -144,10 +145,15 @@ Puppet::Type.type(:package).provide :dpkg, :parent => Puppet::Provider::Package 
     dpkg "--purge", @resource[:name]
   end
 
-  def hold
+  def deprecated_hold
+    Puppet.warning "\"ensure=>held\" has been deprecated and will be removed in a future version, use \"hold=true\" instead "
     if package_not_installed?(@resource[:name])
       self.install
     end
+    hold
+  end
+
+  def hold
     Tempfile.open('puppet_dpkg_set_selection') do |tmpfile|
       tmpfile.write("#{@resource[:name]} hold\n")
       tmpfile.flush
@@ -163,6 +169,7 @@ Puppet::Type.type(:package).provide :dpkg, :parent => Puppet::Provider::Package 
     end
   end
 
+  #needed until ensure=held is removed
   def package_not_installed?(name)
     if !name.nil? && !name.empty?
       begin

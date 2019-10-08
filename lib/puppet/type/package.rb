@@ -101,7 +101,7 @@ module Puppet
       end
 
       newvalue(:held, :event => :package_held, :required_features => :holdable) do
-        provider.hold
+        provider.deprecated_hold
       end
 
       # Alias the 'present' value.
@@ -610,6 +610,11 @@ module Puppet
 
         provider.reinstall
       end
+    end
+
+    newparam(:held, :boolean => false, :parent => Puppet::Parameter::Boolean, :required_features => :holdable) do
+      desc "Set to true to tell Debian apt/Solaris pkg to hold the package version"
+      defaultto false
     end
   end
 end

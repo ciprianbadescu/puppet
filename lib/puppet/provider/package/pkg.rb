@@ -49,7 +49,8 @@ Puppet::Type.type(:package).provide :pkg, :parent => Puppet::Provider::Package d
     ).merge(
       case flags[1..1]
       when 'f'
-        {:ensure => 'held'}
+        {:hold => true}
+
       when '-'
         {}
       else
@@ -105,6 +106,11 @@ Puppet::Type.type(:package).provide :pkg, :parent => Puppet::Provider::Package d
     else
       raise ArgumentError, _('Unknown line format %{resource_name}: %{parse_line}') % { resource_name: self.name, parse_line: line }
     end).merge({:provider => self.name})
+  end
+
+  def deprecated_hold
+    Puppet.warning "\"ensure=>held\" has been deprecated and will be removed in a future version, use \"hold=true\" instead "
+    hold
   end
 
   def hold
@@ -217,6 +223,8 @@ Puppet::Type.type(:package).provide :pkg, :parent => Puppet::Provider::Package d
       name += "@#{should}"
     end
     r = exec_cmd(command(:pkg), command, *args, name)
+    self.hold if @resource[:hold]
+
     return r if nofail
     raise Puppet::Error, _("Unable to update %{package}") % { package: r[:out] } if r[:exit] != 0
   end
